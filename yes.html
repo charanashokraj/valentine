@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YIPPEE!</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #ff4d6d;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    .hearts {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .heart {
+      position: absolute;
+      bottom: -40px;
+      font-size: 26px;
+      opacity: 0.9;
+      animation: floatUp linear forwards;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2));
+      will-change: transform, opacity;
+    }
+
+    @keyframes floatUp {
+      0%   { transform: translateY(0) translateX(0) scale(1) rotate(0deg); opacity: 0; }
+      10%  { opacity: 0.95; }
+      100% { transform: translateY(-120vh) translateX(var(--drift)) scale(var(--scale)) rotate(18deg); opacity: 0; }
+    }
+
+    h1 {
+      z-index: 1;
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      color: white;
+      text-align: center;
+      margin: 0 18px;
+      text-shadow: 0 6px 22px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hearts" id="hearts"></div>
+
+  <h1>I knew it... Yippeee!! 🎉❤️</h1>
+
+  <!-- same file name -->
+  <audio id="bgm" src="romantic.mp3" autoplay loop></audio>
+
+  <script>
+    const bgm = document.getElementById("bgm");
+    const hearts = document.getElementById("hearts");
+
+    async function tryPlayMusic() {
+      try { await bgm.play(); } catch (e) {}
+    }
+    tryPlayMusic();
+    window.addEventListener("pointerdown", tryPlayMusic, { once: true });
+
+    const HEARTS = ["💗","💖","💘","💝","❤️","🩷"];
+    function spawnHeart() {
+      const heart = document.createElement("div");
+      heart.className = "heart";
+      heart.textContent = HEARTS[Math.floor(Math.random() * HEARTS.length)];
+
+      const size = 18 + Math.random() * 34;
+      const left = Math.random() * 100;
+      const duration = 4 + Math.random() * 5;
+      const drift = (Math.random() * 180 - 90) + "px";
+      const scale = (0.8 + Math.random() * 1.2).toFixed(2);
+
+      heart.style.left = left + "vw";
+      heart.style.fontSize = size + "px";
+      heart.style.animationDuration = duration + "s";
+      heart.style.setProperty("--drift", drift);
+      heart.style.setProperty("--scale", scale);
+
+      hearts.appendChild(heart);
+      setTimeout(() => heart.remove(), duration * 1000);
+    }
+
+    setInterval(spawnHeart, 200);
+  </script>
+</body>
+</html>
