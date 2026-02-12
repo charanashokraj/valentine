@@ -132,82 +132,67 @@
   <audio id="bgm" src="romantic.mp3" autoplay loop></audio>
 
   <script>
-    const noBtn = document.getElementById("noBtn");
-    const yesBtn = document.getElementById("yesBtn");
-    const bgm = document.getElementById("bgm");
-    const hearts = document.getElementById("hearts");
+  const noBtn = document.getElementById("noBtn");
+  const yesBtn = document.getElementById("yesBtn");
+  const bgm = document.getElementById("bgm");
 
-    // Attempt autoplay; if blocked, we’ll start on first interaction
-    async function tryPlayMusic() {
-      try { await bgm.play(); } catch (e) { /* autoplay blocked */ }
-    }
-    tryPlayMusic();
+  async function tryPlayMusic() {
+    try { await bgm.play(); } catch (e) {}
+  }
+  tryPlayMusic();
+  window.addEventListener("pointerdown", tryPlayMusic, { once: true });
 
-    // Start music on first user interaction (covers autoplay restrictions)
-    const startMusicOnce = async () => {
-      await tryPlayMusic();
-      window.removeEventListener("pointerdown", startMusicOnce);
-      window.removeEventListener("keydown", startMusicOnce);
-    };
-    window.addEventListener("pointerdown", startMusicOnce);
-    window.addEventListener("keydown", startMusicOnce);
+  function moveNoButtonAwayFromPointer(e) {
+    const padding = 20;
 
-    // NO button runs away (mouse + touch)
-    function moveNoButton() {
-      const padding = 16;
+    const btnW = noBtn.offsetWidth;
+    const btnH = noBtn.offsetHeight;
 
-      // Keep within viewport
-      const maxX = window.innerWidth - noBtn.offsetWidth - padding;
-      const maxY = window.innerHeight - noBtn.offsetHeight - padding;
+    const maxX = window.innerWidth - btnW - padding;
+    const maxY = window.innerHeight - btnH - padding;
 
-      const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
-      const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
+    // pointer position (mouse/touch)
+    const px = e.clientX ?? (window.innerWidth / 2);
+    const py = e.clientY ?? (window.innerHeight / 2);
 
-      noBtn.style.left = randomX + "px";
-      noBtn.style.top = randomY + "px";
-    }
+    // pick a new position that is away from the pointer
+    let x, y;
+    let attempts = 0;
 
-    noBtn.addEventListener("mouseover", moveNoButton);
-    noBtn.addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-      moveNoButton();
-    });
+    do {
+      x = Math.floor(padding + Math.random() * maxX);
+      y = Math.floor(padding + Math.random() * maxY);
+      attempts++;
+      // keep trying until it's not too close to pointer (within ~160px)
+    } while (attempts < 30 && Math.hypot(x - px, y - py) < 160);
 
-    // Redirect on YES click
-    yesBtn.addEventListener("click", async () => {
-      // ensure music starts before redirect (in case it was blocked)
-      await tryPlayMusic();
-      window.location.href = "yes.html";
-    });
+    noBtn.style.left = x + "px";
+    noBtn.style.top = y + "px";
+  }
 
-    // Floating hearts generator
-    const HEARTS = ["💗","💖","💘","💝","❤️","🩷"];
-    function spawnHeart() {
-      const heart = document.createElement("div");
-      heart.className = "heart";
-      heart.textContent = HEARTS[Math.floor(Math.random() * HEARTS.length)];
+  // Run away on hover + touch
+  noBtn.addEventListener("mousemove", moveNoButtonAwayFromPointer);
+  noBtn.addEventListener("mouseover", moveNoButtonAwayFromPointer);
+  noBtn.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    moveNoButtonAwayFromPointer(e);
+  });
 
-      // random size / drift / duration
-      const size = 16 + Math.random() * 28; // px
-      const left = Math.random() * 100; // vw
-      const duration = 4 + Math.random() * 5; // seconds
-      const drift = (Math.random() * 160 - 80) + "px";
-      const scale = (0.8 + Math.random() * 1.2).toFixed(2);
+  // Redirect on YES click
+  yesBtn.addEventListener("click", async () => {
+    await tryPlayMusic();
+    window.location.href = "yes.html";
+  });
 
-      heart.style.left = left + "vw";
-      heart.style.fontSize = size + "px";
-      heart.style.animationDuration = duration + "s";
-      heart.style.setProperty("--drift", drift);
-      heart.style.setProperty("--scale", scale);
-
-      hearts.appendChild(heart);
-
-      // cleanup
-      setTimeout(() => heart.remove(), duration * 1000);
-    }
-
-    // Spawn hearts regularly
-    setInterval(spawnHeart, 220);
-  </script>
+  // Keep NO inside viewport on resize
+  window.addEventListener("resize", () => {
+    const rect = noBtn.getBoundingClientRect();
+    const padding = 20;
+    const x = Math.min(Math.max(padding, rect.left), window.innerWidth - rect.width - padding);
+    const y = Math.min(Math.max(padding, rect.top), window.innerHeight - rect.height - padding);
+    noBtn.style.left = x + "px";
+    noBtn.style.top = y + "px";
+  });
+</script>
 </body>
 </html>
