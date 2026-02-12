@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Be My Valentine?</title>
+  <style>
+    :root {
+      --pink1: #ff9a9e;
+      --pink2: #fad0c4;
+      --hot: #ff4d6d;
+      --grey: #6c757d;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--pink1), var(--pink2));
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    /* Hearts background layer */
+    .hearts {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .heart {
+      position: absolute;
+      bottom: -40px;
+      font-size: 24px;
+      opacity: 0.9;
+      animation: floatUp linear forwards;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.15));
+      will-change: transform, opacity;
+    }
+
+    @keyframes floatUp {
+      0%   { transform: translateY(0) translateX(0) scale(1) rotate(0deg); opacity: 0; }
+      10%  { opacity: 0.95; }
+      100% { transform: translateY(-120vh) translateX(var(--drift)) scale(var(--scale)) rotate(18deg); opacity: 0; }
+    }
+
+    .container {
+      z-index: 1;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      color: white;
+      margin: 0 0 28px;
+      text-shadow: 0 4px 18px rgba(0,0,0,0.15);
+    }
+
+    .buttons {
+      position: relative;
+      height: 120px;
+      width: min(520px, 92vw);
+      margin: 0 auto;
+    }
+
+    button {
+      padding: 14px 28px;
+      font-size: 1.15rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      position: absolute;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.15);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    #yesBtn {
+      left: 38%;
+      background: var(--hot);
+      color: white;
+    }
+
+    #noBtn {
+      left: 58%;
+      background: var(--grey);
+      color: white;
+    }
+
+    .hint {
+      margin-top: 16px;
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.92);
+    }
+
+    .tiny {
+      margin-top: 6px;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.75);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Floating hearts background -->
+  <div class="hearts" id="hearts"></div>
+
+  <div class="container">
+    <h1>Will you be my Valentine? ❤️</h1>
+
+    <div class="buttons">
+      <button id="yesBtn">Yes 💕</button>
+      <button id="noBtn">No 🙈</button>
+    </div>
+
+    <div class="hint">Tip: try clicking “No” 😇</div>
+    <div class="tiny">(If music doesn’t start, tap anywhere once — browsers block autoplay.)</div>
+  </div>
+
+  <!-- Music: put a file named "romantic.mp3" in the same folder -->
+  <audio id="bgm" src="romantic.mp3" autoplay loop></audio>
+
+  <script>
+    const noBtn = document.getElementById("noBtn");
+    const yesBtn = document.getElementById("yesBtn");
+    const bgm = document.getElementById("bgm");
+    const hearts = document.getElementById("hearts");
+
+    // Attempt autoplay; if blocked, we’ll start on first interaction
+    async function tryPlayMusic() {
+      try { await bgm.play(); } catch (e) { /* autoplay blocked */ }
+    }
+    tryPlayMusic();
+
+    // Start music on first user interaction (covers autoplay restrictions)
+    const startMusicOnce = async () => {
+      await tryPlayMusic();
+      window.removeEventListener("pointerdown", startMusicOnce);
+      window.removeEventListener("keydown", startMusicOnce);
+    };
+    window.addEventListener("pointerdown", startMusicOnce);
+    window.addEventListener("keydown", startMusicOnce);
+
+    // NO button runs away (mouse + touch)
+    function moveNoButton() {
+      const padding = 16;
+
+      // Keep within viewport
+      const maxX = window.innerWidth - noBtn.offsetWidth - padding;
+      const maxY = window.innerHeight - noBtn.offsetHeight - padding;
+
+      const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
+      const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
+
+      noBtn.style.left = randomX + "px";
+      noBtn.style.top = randomY + "px";
+    }
+
+    noBtn.addEventListener("mouseover", moveNoButton);
+    noBtn.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      moveNoButton();
+    });
+
+    // Redirect on YES click
+    yesBtn.addEventListener("click", async () => {
+      // ensure music starts before redirect (in case it was blocked)
+      await tryPlayMusic();
+      window.location.href = "yes.html";
+    });
+
+    // Floating hearts generator
+    const HEARTS = ["💗","💖","💘","💝","❤️","🩷"];
+    function spawnHeart() {
+      const heart = document.createElement("div");
+      heart.className = "heart";
+      heart.textContent = HEARTS[Math.floor(Math.random() * HEARTS.length)];
+
+      // random size / drift / duration
+      const size = 16 + Math.random() * 28; // px
+      const left = Math.random() * 100; // vw
+      const duration = 4 + Math.random() * 5; // seconds
+      const drift = (Math.random() * 160 - 80) + "px";
+      const scale = (0.8 + Math.random() * 1.2).toFixed(2);
+
+      heart.style.left = left + "vw";
+      heart.style.fontSize = size + "px";
+      heart.style.animationDuration = duration + "s";
+      heart.style.setProperty("--drift", drift);
+      heart.style.setProperty("--scale", scale);
+
+      hearts.appendChild(heart);
+
+      // cleanup
+      setTimeout(() => heart.remove(), duration * 1000);
+    }
+
+    // Spawn hearts regularly
+    setInterval(spawnHeart, 220);
+  </script>
+</body>
+</html>
